@@ -1,123 +1,307 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
+import ChatHistory from "@/components/ChatHistory";
+import Chats from "@/components/Chats";
+import {
+  Box,
+  Grid,
+  Typography,
+  IconButton,
+  TextField,
+  CircularProgress,
+  SwipeableDrawer,
+} from "@mui/material";
+import { Menu, Send } from "@mui/icons-material";
+import React from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/router";
+import axios from "axios";
 
-const inter = Inter({ subsets: ['latin'] })
+const check_user = async (email: string) => {
+  let data = await axios({
+    method: "POST",
+    url: process.env.DOMAIN + "api/auth/check_user_allowed",
+    data: {
+      email: email,
+    },
+  })
+    .then((res) => {
+      return res;
+    })
+    .catch((err) => {
+      return err.response;
+    });
+  if (data.status !== 200) {
+    signOut({ callbackUrl: process.env.DOMAIN + "login" });
+  }
+};
 
 export default function Home() {
+  const [selectedChat, setSelectedChat] = React.useState(0);
+  const [chats, setChats] = React.useState([
+    { id: 0, title: "New Chat", history: [] },
+  ]);
+  const [chatLoading, setChatLoading] = React.useState(false);
+  const [history, setHistory] = React.useState([]);
+  const [message, setMessage] = React.useState("");
+  const [thinking, setThinking] = React.useState(false);
+  const [user, setUser] = React.useState(null);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  React.useEffect(() => {
+    const get_chats = async () => {
+      let data = await axios({
+        method: "POST",
+        url: process.env.DOMAIN + "api/messages/get_chats",
+        data: {
+          email: session.user.email,
+        },
+      })
+        .then((res) => {
+          return res;
+        })
+        .catch((err) => {
+          return err.response;
+        });
+      if (data.status === 200) {
+        setChats([{ id: 0, title: "New Chat" }, ...data.data.chats.reverse()]);
+      }
+    };
+
+    if (status === "authenticated" && session.user) {
+      setUser(session.user);
+      get_chats();
+    }
+  }, [status]);
+
+  React.useEffect(() => {
+    setChatLoading(true);
+    setDrawerOpen(false);
+    const get_messages = async () => {
+      let data = await axios({
+        method: "POST",
+        url: process.env.DOMAIN + "api/messages/get_messages",
+        data: {
+          chat_id: chats[selectedChat].id,
+        },
+      })
+        .then((res) => {
+          return res;
+        })
+        .catch((err) => {
+          return err.response;
+        });
+      if (data.status === 200) {
+        if (data.data.history.length > 0) {
+          setHistory(data.data.history[0].chat_history);
+          setChatLoading(false);
+        } else {
+          setHistory([]);
+          setChatLoading(false);
+        }
+      }
+    };
+    if (status === "authenticated" && session.user) {
+      get_messages();
+    }
+  }, [selectedChat]);
+
+  if (status === "authenticated") {
+    check_user(session.user.email);
+  } else if (status === "unauthenticated") {
+    router.push("/login");
+    return <CircularProgress />;
+  } else if (status === "loading") {
+    return <CircularProgress />;
+  }
+
+  const sendMessage = async () => {
+    setHistory([...history, { message: message, is_sent: true }]);
+    setMessage("");
+    setThinking(true);
+    let data = await axios({
+      method: "POST",
+      url: process.env.DOMAIN + "api/messages/send_message",
+      data: {
+        chat_id: chats[selectedChat].id,
+        email: session.user.email,
+        message: message,
+        history: history,
+      },
+    })
+      .then((res) => {
+        return res;
+      })
+      .catch((err) => {
+        return err.response;
+      });
+    if (data.status === 200) {
+      if (chats[selectedChat].id === 0) {
+        let old_chats = chats;
+        old_chats.shift();
+        setChats([
+          { id: 0, title: "New Chat" },
+          { id: data.data.chat[0].id, title: data.data.chat[0].title },
+          ...old_chats,
+        ]);
+        setSelectedChat(1);
+        setThinking(false);
+      } else {
+        setHistory(data.data.chat[0].chat_history);
+        setThinking(false);
+      }
+    }
+  };
+
+  const toggleOpenMenu = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const clear_chat = async () => {
+    let data = await axios({
+      method: "POST",
+      url: process.env.DOMAIN + "api/messages/clear_chat",
+      data: {
+        email: session.user.email,
+      },
+    })
+      .then((res) => {
+        return res;
+      })
+      .catch((err) => {
+        return err.response;
+      });
+    if (data.status === 200) {
+      setHistory([]);
+      setChats([{ id: 0, title: "New Chat" }]);
+      setSelectedChat(0);
+    }
+  };
+
   return (
-    <>
-      <Head>
-        <title>Create Next App</title>
-        <meta name="description" content="Generated by create next app" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
+    <Box
+      sx={{
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <SwipeableDrawer
+        PaperProps={{
+          sx: {
+            width: "80%",
+            padding: "20px",
+          },
+        }}
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleOpenMenu}
+      >
+        <Chats
+          active={selectedChat}
+          onClick={(id: number) => setSelectedChat(id)}
+          chats={chats}
+        />
+      </SwipeableDrawer>
+      <Grid
+        container
+        spacing={0}
+        sx={{
+          maxWidth: "1284px",
+          height: "100%",
+        }}
+      >
+        <Grid item md={3} display={{ xs: "none", md: "block", height: "100%" }}>
+          <Chats
+            active={selectedChat}
+            onClick={(id: number) => setSelectedChat(id)}
+            chats={chats}
+            clearChats={clear_chat}
           />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
+        </Grid>
+        <Grid item xs={12} md={9} sx={{ height: "100%" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              backgroundColor: "background.paper",
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                backgroundColor: "background.default",
+                padding: "16px 24px",
+                display: "flex",
+                flexDirection: "row",
+                gap: "16px",
+                alignItems: "center",
+              }}
+            >
+              <Box display={{ xs: "block", md: "none" }}>
+                <IconButton
+                  onClick={() => {
+                    toggleOpenMenu();
+                  }}
+                >
+                  <Menu color="primary" />
+                </IconButton>
+              </Box>
+              <Typography
+                sx={{ color: "font.main", wordWrap: "break-word" }}
+                variant="h6"
+              >
+                {chats[selectedChat] ? chats[selectedChat].title : ""}
+              </Typography>
+            </Box>
+            <ChatHistory
+              loading={chatLoading}
+              thinking={thinking}
+              chat={history}
+              user={user}
+              active={selectedChat}
             />
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-    </>
-  )
+            <Grid container spacing={1} sx={{ padding: "16px 24px" }}>
+              <Grid item xs={11}>
+                <TextField
+                  disabled={thinking}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  sx={{ margin: "16px 0px" }}
+                  fullWidth
+                  label="Type a message"
+                  color="primary"
+                  variant="standard"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      sendMessage();
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid
+                item
+                xs={1}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <IconButton
+                  disabled={thinking}
+                  onClick={() => {
+                    sendMessage();
+                  }}
+                >
+                  <Send color="primary" />
+                </IconButton>
+              </Grid>
+            </Grid>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
+  );
 }
