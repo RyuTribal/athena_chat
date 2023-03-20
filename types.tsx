@@ -1,7 +1,6 @@
 export interface Chat {
   id: number;
   title: string;
-  history: History[];
 }
 
 export interface History {

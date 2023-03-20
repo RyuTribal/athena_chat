@@ -14,8 +14,7 @@ import { SessionProvider } from "next-auth/react";
 
 const clientSideEmotionCache = createEmotionCache();
 
-function MyApp(props: any) {
-  const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
+function MyApp({ Component, emotionCache = clientSideEmotionCache, pageProps }: any) {
 
   //Place paths where header should be invisible here
   const noNav = [];

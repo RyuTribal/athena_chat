@@ -15,7 +15,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import axios from "axios";
 
-const check_user = async (email: string) => {
+const check_user = async (email: any) => {
   let data = await axios({
     method: "POST",
     url: process.env.DOMAIN + "api/auth/check_user_allowed",
@@ -36,9 +36,7 @@ const check_user = async (email: string) => {
 
 export default function Home() {
   const [selectedChat, setSelectedChat] = React.useState(0);
-  const [chats, setChats] = React.useState([
-    { id: 0, title: "New Chat", history: [] },
-  ]);
+  const [chats, setChats] = React.useState([{ id: 0, title: "New Chat" }]);
   const [chatLoading, setChatLoading] = React.useState(false);
   const [history, setHistory] = React.useState([]);
   const [message, setMessage] = React.useState("");
@@ -53,7 +51,7 @@ export default function Home() {
         method: "POST",
         url: process.env.DOMAIN + "api/messages/get_chats",
         data: {
-          email: session.user.email,
+          email: session && session.user ? session.user.email : "",
         },
       })
         .then((res) => {
@@ -68,7 +66,9 @@ export default function Home() {
     };
 
     if (status === "authenticated" && session.user) {
-      setUser(session.user);
+      if (session && session.user) {
+        setUser(session.user);
+      }
       get_chats();
     }
   }, [status]);
@@ -106,7 +106,11 @@ export default function Home() {
   }, [selectedChat]);
 
   if (status === "authenticated") {
-    check_user(session.user.email);
+    let user = null;
+    if (session && session.user) {
+      user = session.user;
+    }
+    check_user(user);
   } else if (status === "unauthenticated") {
     router.push("/login");
     return <CircularProgress />;
@@ -118,12 +122,16 @@ export default function Home() {
     setHistory([...history, { message: message, is_sent: true }]);
     setMessage("");
     setThinking(true);
+    let user = null;
+    if (session && session.user) {
+      user = session.user;
+    }
     let data = await axios({
       method: "POST",
       url: process.env.DOMAIN + "api/messages/send_message",
       data: {
         chat_id: chats[selectedChat].id,
-        email: session.user.email,
+        email: user ? user.email : "",
         message: message,
         history: history,
       },
@@ -157,11 +165,15 @@ export default function Home() {
   };
 
   const clear_chat = async () => {
+    let user = null;
+    if (session && session.user) {
+      user = session.user;
+    }
     let data = await axios({
       method: "POST",
       url: process.env.DOMAIN + "api/messages/clear_chat",
       data: {
-        email: session.user.email,
+        email: user ? user.email : "",
       },
     })
       .then((res) => {
@@ -195,6 +207,7 @@ export default function Home() {
         }}
         anchor="left"
         open={drawerOpen}
+        onOpen={() => setDrawerOpen(true)}
         onClose={toggleOpenMenu}
       >
         <Chats
