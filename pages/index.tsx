@@ -29,6 +29,7 @@ const check_user = async (email: any) => {
     .catch((err) => {
       return err.response;
     });
+  console.log(data);
   if (data.status !== 200) {
     signOut({ callbackUrl: "https://athenachat.app/login" });
   }
@@ -51,7 +52,7 @@ export default function Home() {
         method: "POST",
         url: "api/messages/get_chats",
         data: {
-          email: session && session.user ? session.user.email : "",
+          email: session.user.email,
         },
       })
         .then((res) => {
@@ -106,16 +107,36 @@ export default function Home() {
   }, [selectedChat]);
 
   if (status === "authenticated") {
-    let user = null;
-    if (session && session.user) {
-      user = session.user;
-    }
-    check_user(user);
+    check_user(session.user);
   } else if (status === "unauthenticated") {
     router.push("/login");
-    return <CircularProgress />;
+    return (
+      <Box
+        sx={{
+          height: "100%",
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   } else if (status === "loading") {
-    return <CircularProgress />;
+    return (
+      <Box
+        sx={{
+          height: "100%",
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   const sendMessage = async () => {
