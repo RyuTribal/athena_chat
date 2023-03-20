@@ -101,9 +101,10 @@ export default function Home() {
       .catch((err) => {
         return err.response;
       });
-      setChecking(false);
     if (data.status !== 200) {
       signOut({ callbackUrl: "https://athenachat.app/login" });
+    } else {
+      setChecking(false);
     }
   };
 
