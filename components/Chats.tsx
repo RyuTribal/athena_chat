@@ -71,7 +71,7 @@ export default function Chats(props: any) {
         </Box>
       </ButtonBase>
       <ButtonBase
-        onClick={() => signOut({ callbackUrl: "http://localhost:3000/login" })}
+        onClick={() => signOut({ callbackUrl: "https://athenachat.app/login" })}
         sx={{
           width: "100%",
           border: "2px solid #C7486A",

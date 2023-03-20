@@ -25,7 +25,7 @@ export default function Login(props: any) {
       <Button
         variant="contained"
         onClick={() =>
-          signIn("google", { callbackUrl: "http://localhost:3000/" })
+          signIn("google", { callbackUrl: "https://athenachat.app/" })
         }
       >
         Sign in with Google
