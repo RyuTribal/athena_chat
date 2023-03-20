@@ -87,7 +87,7 @@ export default function ChatHistory(props: any) {
               }}
               variant="body1"
             >
-              What's new in Sweden?
+              What&apos;s new in Sweden?
             </Typography>
           </Grid>
           <Grid
@@ -267,6 +267,7 @@ export default function ChatHistory(props: any) {
                     <a
                       style={{ color: theme.palette.primary.main }}
                       target="_blank"
+                      rel="noreferrer"
                       {...props}
                     />
                   ),
@@ -282,6 +283,7 @@ export default function ChatHistory(props: any) {
                     component="a"
                     href={image}
                     target="_blank"
+                    rel="noreferrer"
                     item
                     xs={12}
                     sm={6}
