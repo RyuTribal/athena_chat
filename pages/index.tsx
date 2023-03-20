@@ -18,7 +18,7 @@ import axios from "axios";
 const check_user = async (email: any) => {
   let data = await axios({
     method: "POST",
-    url: process.env.DOMAIN + "api/auth/check_user_allowed",
+    url: "api/auth/check_user_allowed",
     data: {
       email: email,
     },
@@ -30,7 +30,7 @@ const check_user = async (email: any) => {
       return err.response;
     });
   if (data.status !== 200) {
-    signOut({ callbackUrl: process.env.DOMAIN + "login" });
+    signOut({ callbackUrl: "login" });
   }
 };
 
@@ -49,7 +49,7 @@ export default function Home() {
     const get_chats = async () => {
       let data = await axios({
         method: "POST",
-        url: process.env.DOMAIN + "api/messages/get_chats",
+        url: "api/messages/get_chats",
         data: {
           email: session && session.user ? session.user.email : "",
         },
@@ -79,7 +79,7 @@ export default function Home() {
     const get_messages = async () => {
       let data = await axios({
         method: "POST",
-        url: process.env.DOMAIN + "api/messages/get_messages",
+        url: "api/messages/get_messages",
         data: {
           chat_id: chats[selectedChat].id,
         },
@@ -128,7 +128,7 @@ export default function Home() {
     }
     let data = await axios({
       method: "POST",
-      url: process.env.DOMAIN + "api/messages/send_message",
+      url: "api/messages/send_message",
       data: {
         chat_id: chats[selectedChat].id,
         email: user ? user.email : "",
@@ -171,7 +171,7 @@ export default function Home() {
     }
     let data = await axios({
       method: "POST",
-      url: process.env.DOMAIN + "api/messages/clear_chat",
+      url: "api/messages/clear_chat",
       data: {
         email: user ? user.email : "",
       },
