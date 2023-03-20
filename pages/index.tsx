@@ -15,31 +15,12 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import axios from "axios";
 
-const check_user = async (email: any) => {
-  let data = await axios({
-    method: "POST",
-    url: "api/auth/check_user_allowed",
-    data: {
-      email: email,
-    },
-  })
-    .then((res) => {
-      return res;
-    })
-    .catch((err) => {
-      return err.response;
-    });
-  console.log(data.data);
-  if (data.status !== 200) {
-    signOut({ callbackUrl: "https://athenachat.app/login" });
-  }
-};
-
 export default function Home() {
   const [selectedChat, setSelectedChat] = React.useState(0);
   const [chats, setChats] = React.useState([{ id: 0, title: "New Chat" }]);
   const [chatLoading, setChatLoading] = React.useState(false);
   const [history, setHistory] = React.useState([]);
+  const [checking, setChecking] = React.useState(true);
   const [message, setMessage] = React.useState("");
   const [thinking, setThinking] = React.useState(false);
   const [user, setUser] = React.useState(null);
@@ -73,6 +54,26 @@ export default function Home() {
       get_chats();
     }
   }, [status]);
+
+  const check_user = async (email: any) => {
+    let data = await axios({
+      method: "POST",
+      url: "api/auth/check_user_allowed",
+      data: {
+        email: email,
+      },
+    })
+      .then((res) => {
+        return res;
+      })
+      .catch((err) => {
+        return err.response;
+      });
+    setChecking(false);
+    if (data.status !== 200) {
+      signOut({ callbackUrl: "https://athenachat.app/login" });
+    }
+  };
 
   React.useEffect(() => {
     setChatLoading(true);
@@ -108,7 +109,7 @@ export default function Home() {
 
   if (status === "authenticated") {
     check_user(session.user.email);
-  } else if (status === "unauthenticated") {
+  } else if (status === "unauthenticated" || checking) {
     router.push("/login");
     return (
       <Box
