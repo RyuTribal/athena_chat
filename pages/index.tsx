@@ -110,7 +110,7 @@ export default function Home() {
     check_user(session.user.email).then(() => {
       setChecking(false);
     });
-  } else if (status === "unauthenticated" || checking) {
+  } else if (status === "unauthenticated") {
     router.push("/login");
     return (
       <Box
@@ -125,7 +125,7 @@ export default function Home() {
         <CircularProgress />
       </Box>
     );
-  } else if (status === "loading") {
+  } else if (status === "loading" || checking) {
     return (
       <Box
         sx={{
