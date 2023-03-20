@@ -289,7 +289,7 @@ export default function ChatHistory(props: any) {
                     sm={6}
                     key={index}
                   >
-                    <Image src={image} style={{ width: "100%" }} />
+                    <Image alt="generated image" src={image} style={{ width: "100%" }} />
                   </Grid>
                 ))}
               </Grid>
