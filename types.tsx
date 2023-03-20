@@ -7,4 +7,5 @@ export interface Chat {
 export interface History {
   is_sent: boolean;
   message: string;
+  images?: string[];
 }

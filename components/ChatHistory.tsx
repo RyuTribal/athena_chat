@@ -7,6 +7,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import theme from "@/theme/theme";
+import Image from "next/image";
 
 export default function ChatHistory(props: any) {
   const chat_history = [...props.chat].reverse();
@@ -286,7 +287,7 @@ export default function ChatHistory(props: any) {
                     sm={6}
                     key={index}
                   >
-                    <img src={image} style={{ width: "100%" }} />
+                    <Image src={image} style={{ width: "100%" }} />
                   </Grid>
                 ))}
               </Grid>
