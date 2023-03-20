@@ -29,7 +29,7 @@ const check_user = async (email: any) => {
     .catch((err) => {
       return err.response;
     });
-  console.log(data);
+  console.log(data.data);
   if (data.status !== 200) {
     signOut({ callbackUrl: "https://athenachat.app/login" });
   }
