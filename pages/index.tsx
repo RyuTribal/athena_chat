@@ -107,7 +107,7 @@ export default function Home() {
   }, [selectedChat]);
 
   if (status === "authenticated") {
-    check_user(session.user);
+    check_user(session.user.email);
   } else if (status === "unauthenticated") {
     router.push("/login");
     return (
